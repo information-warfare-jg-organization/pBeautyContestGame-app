@@ -54,13 +54,14 @@ app.get('/games/:gameId', async (req, res) => {
       .filter(x => x.count > 0)
       .sort((a, b) => a.value - b.value);
 
-    res.render('gameDetailsView', {
-      gameId,
-      mean: stats.mean,
-      winningValue: stats.winning_value,
-      winners,          
-      distribution    
-    });
+  res.render('gameDetailsView', {
+    gameId,
+    mean: stats.mean,
+    winningValue: stats.winning_value,
+    playersCount: stats.total_answers, 
+    winners,
+    distribution
+  });
   } catch (e) {
     console.error(e);
     res.status(e.status ?? 500).send(e.message ?? 'Błąd serwera');

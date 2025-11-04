@@ -31,6 +31,10 @@
           <td><%= winningDisplay %></td>
         </tr>
         <tr>
+          <th>Liczba graczy</th>
+          <td><%= (typeof playersCount === 'number' ? playersCount : 0) %></td>
+        </tr>
+        <tr>
           <th>Zwycięzcy</th>
           <td>
             <% if (hasWinners) { %>

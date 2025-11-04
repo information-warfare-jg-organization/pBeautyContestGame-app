@@ -5,6 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Lista gier</title>
   <link rel="stylesheet" href="/style/style.css" />
+  <style>
+    /* Drobne ulepszenie UX */
+    #gamesTable tbody tr {
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+    #gamesTable tbody tr:hover {
+      background-color: #f0f4ff;
+    }
+  </style>
 </head>
 <body>
   <h1>Lista gier</h1>
@@ -28,7 +38,7 @@
         </thead>
         <tbody>
           <% games.forEach(g => { %>
-            <tr data-status="<%= g.game_status %>">
+            <tr data-id="<%= g.game_id %>" data-status="<%= g.game_status %>">
               <td><%= g.game_id %></td>
               <td><%= new Date(g.game_date).toLocaleString() %></td>
               <td>
@@ -46,7 +56,7 @@
   </div>
 
   <script>
-    // proste filtrowanie po statusie w przeglądarce
+    // Filtrowanie po statusie
     const input = document.getElementById('filter');
     const rows = Array.from(document.querySelectorAll('#gamesTable tbody tr'));
     input?.addEventListener('input', () => {
@@ -54,6 +64,16 @@
       rows.forEach(tr => {
         const st = (tr.dataset.status || '').toLowerCase();
         tr.style.display = (!q || st.includes(q)) ? '' : 'none';
+      });
+    });
+
+    // Kliknięcie w wiersz -> przejście do /games/{id}
+    rows.forEach(tr => {
+      tr.addEventListener('click', () => {
+        const id = tr.dataset.id;
+        if (id) {
+          window.location.href = `/games/${id}`;
+        }
       });
     });
   </script>
