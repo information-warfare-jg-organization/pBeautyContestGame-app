@@ -1,0 +1,102 @@
+/* ====== Globalne style aplikacji ====== */
+:root {
+  color-scheme: light;
+  --bg-color: #f9f9fb;
+  --card-bg: #ffffff;
+  --text-color: #222;
+  --muted-color: #555;
+  --border-color: #ddd;
+  --accent-green: #0a7a2a;
+  --accent-red: #b40b0b;
+  --accent-green-bg: #e7f7eb;
+  --accent-red-bg: #fdecec;
+}
+
+body {
+  font-family: system-ui, Arial, sans-serif;
+  margin: 40px;
+  background: var(--bg-color);
+  color: var(--text-color);
+}
+
+h1 {
+  color: var(--text-color);
+  margin-bottom: 16px;
+}
+
+.card {
+  background: var(--card-bg);
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  padding: 20px;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  background: var(--card-bg);
+}
+
+th,
+td {
+  border-bottom: 1px solid var(--border-color);
+  padding: 10px 12px;
+  text-align: left;
+  color: var(--text-color);
+}
+
+th {
+  background: #f1f1f1;
+}
+
+tr:hover {
+  background: #f8f8f8;
+}
+
+.badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.badge-open {
+  background: var(--accent-green-bg);
+  color: var(--accent-green);
+  border: 1px solid #c9efda;
+}
+
+.badge-closed {
+  background: var(--accent-red-bg);
+  color: var(--accent-red);
+  border: 1px solid #f8d1d1;
+}
+
+.toolbar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  align-items: center;
+}
+
+.search {
+  padding: 8px 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  min-width: 220px;
+  color: var(--text-color);
+  background: #fff;
+}
+
+.meta {
+  color: var(--muted-color);
+  font-size: 14px;
+  margin-left: auto;
+}
+
+.empty {
+  color: var(--muted-color);
+  padding: 24px;
+  text-align: center;
+}

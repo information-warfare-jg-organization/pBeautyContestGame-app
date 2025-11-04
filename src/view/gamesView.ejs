@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Lista gier</title>
+  <link rel="stylesheet" href="/style/style.css" />
+</head>
+<body>
+  <h1>Lista gier</h1>
+
+  <div class="card">
+    <div class="toolbar">
+      <input id="filter" class="search" type="text" placeholder="Filtruj po statusie (open/closed)..." />
+      <span class="meta"><%= games.length %> rekord(y/ów)</span>
+    </div>
+
+    <% if (!games || games.length === 0) { %>
+      <div class="empty">Brak gier w bazie.</div>
+    <% } else { %>
+      <table id="gamesTable">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Data utworzenia</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% games.forEach(g => { %>
+            <tr data-status="<%= g.game_status %>">
+              <td><%= g.game_id %></td>
+              <td><%= new Date(g.game_date).toLocaleString() %></td>
+              <td>
+                <% if (g.game_status === 'open') { %>
+                  <span class="badge badge-open">open</span>
+                <% } else { %>
+                  <span class="badge badge-closed">closed</span>
+                <% } %>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    <% } %>
+  </div>
+
+  <script>
+    // proste filtrowanie po statusie w przeglądarce
+    const input = document.getElementById('filter');
+    const rows = Array.from(document.querySelectorAll('#gamesTable tbody tr'));
+    input?.addEventListener('input', () => {
+      const q = (input.value || '').trim().toLowerCase();
+      rows.forEach(tr => {
+        const st = (tr.dataset.status || '').toLowerCase();
+        tr.style.display = (!q || st.includes(q)) ? '' : 'none';
+      });
+    });
+  </script>
+</body>
+</html>
