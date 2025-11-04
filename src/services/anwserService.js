@@ -21,6 +21,24 @@ export async function listAnswers({ gameId, limit = 50, offset = 0 } = {}) {
   return rows;
 }
 
+
+export async function getAnswersByIds(ids = []) {
+  if (!Array.isArray(ids) || ids.length === 0) {
+    return [];
+  }
+
+  const { rows } = await pool.query(
+    `SELECT answer_id, user_name, answer, game_id, answer_date
+     FROM answer
+     WHERE answer_id = ANY($1::int[])
+     ORDER BY answer_id`,
+    [ids]
+  );
+
+  return rows;
+}
+
+
 export async function getAnswer(id) {
   const { rows } = await pool.query(
     `SELECT answer_id, user_name, answer, game_id, answer_date

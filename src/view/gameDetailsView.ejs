@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Szczegóły gry <%= gameId %></title>
+  <link rel="stylesheet" href="/style/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <h1>Gra #<%= gameId %></h1>
+
+  <% 
+    const meanIsNumber = (typeof mean === 'number' && isFinite(mean));
+    const winningIsNumber = (typeof winningValue === 'number' && isFinite(winningValue));
+    const meanDisplay = meanIsNumber ? mean.toFixed(4) : '—';
+    const winningDisplay = winningIsNumber ? winningValue.toFixed(4) : '—';
+    const hasWinners = Array.isArray(winners) && winners.length > 0;
+    const hasDist = Array.isArray(distribution) && distribution.length > 0;
+  %>
+
+  <div class="card" style="margin-bottom:16px;">
+    <table>
+      <tbody>
+        <tr>
+          <th>Średnia</th>
+          <td><%= meanDisplay %></td>
+        </tr>
+        <tr>
+          <th>Wartość wygrywająca (2/3 * średnia)</th>
+          <td><%= winningDisplay %></td>
+        </tr>
+        <tr>
+          <th>Zwycięzcy</th>
+          <td>
+            <% if (hasWinners) { %>
+              <ul style="margin:0; padding-left:18px;">
+                <% winners.forEach(function(w){ %>
+                  <li>
+                    <strong><%= w.user_name %></strong>
+                    ( odpowiedź: <%= w.answer %>)
+                  </li>
+                <% }); %>
+              </ul>
+            <% } else { %>
+              —
+            <% } %>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2 style="margin-top:0;">Histogram odpowiedzi</h2>
+<% if (!hasDist) { %>
+  <div class="empty">Brak odpowiedzi dla tej gry.</div>
+<% } else { %>
+<canvas
+  id="histogram"
+  height="220"
+  data-real-value="<%= (typeof winningValue === 'number' && isFinite(winningValue)) ? winningValue : '' %>"
+  data-highlight-value="<%= (Array.isArray(winners) && winners.length && typeof winners[0].answer === 'number') ? winners[0].answer : '' %>">
+</canvas>
+  <script id="dist-data" type="application/json">
+    <%- JSON.stringify(distribution || []) %>
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="/scripts/distributionChartScript.js"></script>
+<% } %>
+
+
+  </div>
+</body>
+</html>
