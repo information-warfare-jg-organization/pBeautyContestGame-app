@@ -20,7 +20,7 @@
       </div>
       <% } %>
 
-        <form method="post" action="/games/<%= gameId %>/anwser" novalidate>
+        <form method="post" action="/games/<%= gameId %>/answer" novalidate>
           <div class="row">
             <input id="userName" name="userName" type="text" required placeholder="Nazwa użytkownika"
               value="<%= values?.userName ?? '' %>" class="search" />

@@ -3,10 +3,12 @@ import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-import { listGames, getGame } from './src/services/gameService.js';
+import { listGames, getGame, createGame, updateGameStatus, deleteGame } from './src/services/gameService.js';
+import { listAnswers, getAnswersByIds,createAnswer, deleteAnswer } from './src/services/answerService.js';
 import { getWinningStats } from './src/services/winningStatsService.js';
-import { getAnswerDistribution } from './src/services/anwserDistributionService.js';
-import { listAnswers, getAnswersByIds,createAnswer } from './src/services/anwserService.js';
+import { getAnswerDistribution } from './src/services/answerDistributionService.js';
+import { getGeneralWinningStats } from './src/services/generalWinningStatsService.js';
+import { getGeneralAnswerDistribution } from './src/services/generalAnswerDistributionService.js';
 
 
 const __filename = fileURLToPath(import.meta.url);
@@ -74,7 +76,7 @@ app.get('/games/:gameId', async (req, res) => {
 app.get('/', (req, res) => res.redirect('/games'));
 
 // GET: formularz odpowiedzi
-app.get('/games/:gameId/anwser', async (req, res) => {
+app.get('/games/:gameId/answer', async (req, res) => {
   try {
     const gameId = Number(req.params.gameId);
     const game = await getGame(gameId);
@@ -84,7 +86,7 @@ app.get('/games/:gameId/anwser', async (req, res) => {
       return res.redirect(`/games/${gameId}`);
     }
 
-    res.render('anwserFormView', {
+    res.render('answerFormView', {
       gameId,
       error: req.query.error ?? null,
       values: { userName: '', answer: '' }
@@ -96,7 +98,7 @@ app.get('/games/:gameId/anwser', async (req, res) => {
 });
 
 // POST: zapis odpowiedzi
-app.post('/games/:gameId/anwser', async (req, res) => {
+app.post('/games/:gameId/answer', async (req, res) => {
   const gameId = Number(req.params.gameId);
   const { userName, answer } = req.body;
 
@@ -111,7 +113,7 @@ app.post('/games/:gameId/anwser', async (req, res) => {
     const parsedAnswer = Number.parseInt(answer, 10);
     if (!userName || !Number.isInteger(parsedAnswer) || parsedAnswer < 0 || parsedAnswer > 100) {
       const msg = encodeURIComponent('Podaj nazwę oraz odpowiedź 0–100.');
-      return res.redirect(`/games/${gameId}/anwser?error=${msg}`);
+      return res.redirect(`/games/${gameId}/answer?error=${msg}`);
     }
 
     await createAnswer(gameId, { userName, answer: parsedAnswer });
@@ -119,9 +121,95 @@ app.post('/games/:gameId/anwser', async (req, res) => {
   } catch (e) {
     console.error(e);
     const msg = encodeURIComponent(e.message || 'Błąd zapisu odpowiedzi');
-    return res.redirect(`/games/${gameId}/anwser?error=${msg}`);
+    return res.redirect(`/games/${gameId}/answer?error=${msg}`);
   }
 });
+
+// GET: panel admina z listą gier
+app.get('/admin/games', async (req, res) => {
+  try {
+    const games = await listGames({ limit: 500, offset: 0 });
+    res.render('adminGamesView', {
+      games,
+      flash: req.query.flash ?? null,
+      error: req.query.error ?? null,
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).send('Server error');
+  }
+});
+
+// POST: utwórz nową grę (domyślnie open)
+app.post('/admin/games', async (req, res) => {
+  try {
+    const status = (req.body.gameStatus === 'closed') ? 'closed' : 'open';
+    await createGame({ gameStatus: status });
+    res.redirect('/admin/games?flash=Utworzono+nową+grę');
+  } catch (e) {
+    console.error(e);
+    res.redirect('/admin/games?error=' + encodeURIComponent(e.message || 'Błąd tworzenia gry'));
+  }
+});
+
+// POST: zamknij grę
+app.post('/admin/games/:id/close', async (req, res) => {
+  try {
+    await updateGameStatus(Number(req.params.id), 'closed');
+    res.redirect('/admin/games?flash=Zamknięto+grę');
+  } catch (e) {
+    console.error(e);
+    res.redirect('/admin/games?error=' + encodeURIComponent(e.message || 'Błąd zamykania gry'));
+  }
+});
+
+// POST: otwórz grę
+app.post('/admin/games/:id/open', async (req, res) => {
+  try {
+    await updateGameStatus(Number(req.params.id), 'open');
+    res.redirect('/admin/games?flash=Otwarto+grę');
+  } catch (e) {
+    console.error(e);
+    res.redirect('/admin/games?error=' + encodeURIComponent(e.message || 'Błąd otwierania gry'));
+  }
+});
+
+// POST: usuń grę (kaskadowo usunie answers jeśli masz ON DELETE CASCADE)
+app.post('/admin/games/:id/delete', async (req, res) => {
+  try {
+    await deleteGame(Number(req.params.id));
+    res.redirect('/admin/games?flash=Usunięto+grę');
+  } catch (e) {
+    console.error(e);
+    res.redirect('/admin/games?error=' + encodeURIComponent(e.message || 'Błąd usuwania gry'));
+  }
+});
+
+// ROUTE: /games/general
+app.get('/general/games', async (req, res) => {
+  try {
+    const stats = await getGeneralWinningStats();          // { mean, winning_value, total_answers }
+    const dist  = await getGeneralAnswerDistribution();    // { countsByAnswer: { "0": n, ... } }
+
+    // przygotuj dane do histogramu (tablica obiektów {value, count} tylko z >0)
+    const distribution = Object.entries(dist.countsByAnswer)
+      .map(([value, count]) => ({ value: Number(value), count: Number(count) }))
+      .filter(x => x.count > 0)
+      .sort((a, b) => a.value - b.value);
+
+    res.render('generalDetailsView', {
+      mean: stats.mean,
+      winningValue: stats.winning_value,
+      playersCount: stats.total_answers,
+      // w ujęciu "general" nie zwracamy listy zwycięzców (brak najbliższych id)
+      distribution
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).send(e.message || 'Błąd serwera');
+  }
+});
+
 
 
 /* ====== API (jak wcześniej) – zostawiam skrótowo, masz je już zrobione ====== */

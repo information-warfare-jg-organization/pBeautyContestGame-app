@@ -118,7 +118,15 @@ form .row { display: grid; gap: 8px; margin-bottom: 12px; }
   .error { color:#b40b0b; background:#fdecec; border:1px solid #f8d1d1; padding:10px 12px; border-radius:8px; margin-bottom:12px; }
 
 
-
+    .admin-actions { display:flex; gap:8px; flex-wrap: wrap; }
+    .btn { padding: 6px 10px; border:1px solid #ddd; border-radius:8px; background:#fff; cursor:pointer; font-size:14px; }
+    .btn-danger { border-color:#d9534f; color:#d9534f; }
+    .btn-primary { border-color:#0f62fe; background:#0f62fe; color:#fff; }
+    .btn-ghost { background:#fff; }
+    .flash { margin-bottom:12px; padding:10px 12px; border-radius:8px; background:#e7f7eb; border:1px solid #c9efda; color:#0a7a2a; }
+    .error { margin-bottom:12px; padding:10px 12px; border-radius:8px; background:#fdecec; border:1px solid #f8d1d1; color:#b40b0b; }
+    .toolbar-admin { display:flex; gap:12px; align-items:center; margin-bottom:12px; }
+    .toolbar-admin form { display:inline; }
 
 
 

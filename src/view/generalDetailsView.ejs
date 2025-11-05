@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Podsumowanie gier (closed)</title>
+  <link rel="stylesheet" href="/style/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <h1>Podsumowanie zakończonych gier</h1>
+
+  <%
+    const meanIsNumber = (typeof mean === 'number' && isFinite(mean));
+    const winningIsNumber = (typeof winningValue === 'number' && isFinite(winningValue));
+    const meanDisplay = meanIsNumber ? mean.toFixed(4) : '—';
+    const winningDisplay = winningIsNumber ? winningValue.toFixed(4) : '—';
+    const hasDist = Array.isArray(distribution) && distribution.length > 0;
+  %>
+
+  <div class="card" style="margin-bottom:16px;">
+    <table>
+      <tbody>
+        <tr>
+          <th>Średnia </th>
+          <td><%= meanDisplay %></td>
+        </tr>
+        <tr>
+          <th>Wartość wygrywająca (2/3 * średnia)</th>
+          <td><%= winningDisplay %></td>
+        </tr>
+        <tr>
+          <th>Liczba wszystkich odpowiedzi </th>
+          <td><%= (typeof playersCount === 'number' ? playersCount : 0) %></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2 style="margin-top:0;">Histogram odpowiedzi (CLOSED)</h2>
+
+    <% if (!hasDist) { %>
+      <div class="empty">Brak odpowiedzi w zamkniętych grach.</div>
+    <% } else { %>
+      <canvas
+        id="histogram"
+        height="220"
+        data-real-value="<%= (typeof winningValue === 'number' && isFinite(winningValue)) ? winningValue : '' %>"
+        data-highlight-value="">
+      </canvas>
+
+      <script id="dist-data" type="application/json">
+        <%- JSON.stringify(distribution || []) %>
+      </script>
+
+      <script src="/scripts/distributionChartScript.js"></script>
+    <% } %>
+  </div>
+</body>
+</html>

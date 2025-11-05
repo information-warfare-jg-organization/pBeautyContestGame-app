@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin • Gry</title>
+  <link rel="stylesheet" href="/style/style.css" />
+</head>
+<body>
+  <h1>Panel administratora — Gry</h1>
+
+  <div class="card">
+    <% if (flash) { %><div class="flash"><%= flash %></div><% } %>
+    <% if (error) { %><div class="error"><%= error %></div><% } %>
+
+    <div class="toolbar-admin">
+      <!-- Nowa gra (domyślnie OPEN) -->
+      <form method="post" action="/admin/games">
+        <input type="hidden" name="gameStatus" value="open" />
+        <button class="btn btn-primary" type="submit">+ Nowa gra (open)</button>
+      </form>
+    </div>
+
+    <% if (!games || games.length === 0) { %>
+      <div class="empty">Brak gier w bazie.</div>
+    <% } else { %>
+      <table id="adminGamesTable">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Data utworzenia</th>
+            <th>Status</th>
+            <th>Akcje</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% games.forEach(g => { %>
+            <tr>
+              <td><a href="/games/<%= g.game_id %>"><%= g.game_id %></a></td>
+              <td><%= new Date(g.game_date).toLocaleString() %></td>
+              <td>
+                <% if (g.game_status === 'open') { %>
+                  <span class="badge badge-open">open</span>
+                <% } else { %>
+                  <span class="badge badge-closed">closed</span>
+                <% } %>
+              </td>
+              <td>
+                <div class="admin-actions">
+                  <% if (g.game_status === 'open') { %>
+                    <form method="post" action="/admin/games/<%= g.game_id %>/close">
+                      <button class="btn" type="submit">Zamknij</button>
+                    </form>
+                  <% } else { %>
+                    <form method="post" action="/admin/games/<%= g.game_id %>/open">
+                      <button class="btn" type="submit">Otwórz</button>
+                    </form>
+                  <% } %>
+
+                  <form method="post" action="/admin/games/<%= g.game_id %>/delete" onsubmit="return confirm('Usunąć grę #<%= g.game_id %>? Powiązane odpowiedzi również zostaną usunięte.');">
+                    <button class="btn btn-danger" type="submit">Usuń</button>
+                  </form>
+                  <a class="btn" href="/games/<%= g.game_id %>">Podgląd</a>
+                </div>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    <% } %>
+  </div>
+</body>
+</html>
