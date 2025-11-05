@@ -1,5 +1,5 @@
 // CRUD dla tabeli answer
-import { pool } from './../db/db.js';
+import { pool } from '../db/db.js';
 
 export async function listAnswers({ gameId, limit = 50, offset = 0 } = {}) {
   const params = [];
@@ -83,6 +83,14 @@ export async function createAnswer(gameId, { userName, answer }) {
     [userName, answer, gameId]
   );
   return rows[0];
+}
+
+export async function countAnswersByGame(gameId) {
+  const { rows } = await pool.query(
+    `SELECT COUNT(*)::int AS cnt FROM answer WHERE game_id = $1`,
+    [gameId]
+  );
+  return rows[0]?.cnt ?? 0;
 }
 
 export async function updateAnswer(id, { userName, answer }) {

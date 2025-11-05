@@ -4,7 +4,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 import { listGames, getGame, createGame, updateGameStatus, deleteGame } from './src/services/gameService.js';
-import { listAnswers, getAnswersByIds,createAnswer, deleteAnswer } from './src/services/answerService.js';
+import { getAnswersByIds, createAnswer, countAnswersByGame } from './src/services/answerService.js';
 import { getWinningStats } from './src/services/winningStatsService.js';
 import { getAnswerDistribution } from './src/services/answerDistributionService.js';
 import { getGeneralWinningStats } from './src/services/generalWinningStatsService.js';
@@ -43,34 +43,49 @@ app.get('/games', async (req, res) => {
 // ====== WIDOK /game/gameId ======
 app.get('/games/:gameId', async (req, res) => {
   try {
+
     const gameId = Number(req.params.gameId);
-    if (!Number.isInteger(gameId)) return res.status(400).send('Nieprawidłowe gameId');
+    try {
+      const game = await getGame(gameId);
+      if (!game) return res.status(404).send('Game not found');
 
-    const stats = await getWinningStats(gameId);          // mean, winning_value, closest_answer_ids
-    const dist  = await getAnswerDistribution(gameId);    // countsByAnswer { "0": n, ... "100": n }
+      if (game.game_status === 'open') {
+        const answersCount = await countAnswersByGame(gameId);
+        return res.render('openGameDetailsView', {
+          gameId,
+          answersCount
+        });
+      }
 
-    // Pobierz zwycięskie odpowiedzi (użytkownicy + wartości)
-    const winners = await getAnswersByIds(stats.closest_answer_ids);
-
-    // Przygotuj dane do histogramu: tylko słupki z count > 0, rosnąco
-    const distribution = Object.entries(dist.countsByAnswer)
-      .map(([value, count]) => ({ value: Number(value), count: Number(count) }))
-      .filter(x => x.count > 0)
-      .sort((a, b) => a.value - b.value);
-
-  res.render('gameDetailsView', {
-    gameId,
-    mean: stats.mean,
-    winningValue: stats.winning_value,
-    playersCount: stats.total_answers, 
-    winners,
-    distribution
-  });
-  } catch (e) {
+        } catch (e) {
     console.error(e);
-    res.status(e.status ?? 500).send(e.message ?? 'Błąd serwera');
+    res.status(500).send('Server error');
   }
-});
+      const stats = await getWinningStats(gameId);          // mean, winning_value, closest_answer_ids
+      const dist = await getAnswerDistribution(gameId);    // countsByAnswer { "0": n, ... "100": n }
+
+      // Pobierz zwycięskie odpowiedzi (użytkownicy + wartości)
+      const winners = await getAnswersByIds(stats.closest_answer_ids);
+
+      // Przygotuj dane do histogramu: tylko słupki z count > 0, rosnąco
+      const distribution = Object.entries(dist.countsByAnswer)
+        .map(([value, count]) => ({ value: Number(value), count: Number(count) }))
+        .filter(x => x.count > 0)
+        .sort((a, b) => a.value - b.value);
+
+      res.render('gameDetailsView', {
+        gameId,
+        mean: stats.mean,
+        winningValue: stats.winning_value,
+        playersCount: stats.total_answers,
+        winners,
+        distribution
+      });
+    } catch (e) {
+      console.error(e);
+      res.status(e.status ?? 500).send(e.message ?? 'Błąd serwera');
+    }
+  });
 
 // (opcjonalnie) przekierowanie z / na /gamse
 app.get('/', (req, res) => res.redirect('/games'));
@@ -189,7 +204,7 @@ app.post('/admin/games/:id/delete', async (req, res) => {
 app.get('/general/games', async (req, res) => {
   try {
     const stats = await getGeneralWinningStats();          // { mean, winning_value, total_answers }
-    const dist  = await getGeneralAnswerDistribution();    // { countsByAnswer: { "0": n, ... } }
+    const dist = await getGeneralAnswerDistribution();    // { countsByAnswer: { "0": n, ... } }
 
     // przygotuj dane do histogramu (tablica obiektów {value, count} tylko z >0)
     const distribution = Object.entries(dist.countsByAnswer)
