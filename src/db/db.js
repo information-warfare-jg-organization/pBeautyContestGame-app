@@ -8,6 +8,10 @@ export const pool = new Pool({
   database: process.env.PGDATABASE,
   user: process.env.PGUSER,
   password: process.env.PGPASSWORD,
+  ssl: {
+        rejectUnauthorized: process.env.SSLREQUIRE,
+        ca: process.env.SSLCERT,
+    },
 });
 
 pool.on('error', (err) => {
