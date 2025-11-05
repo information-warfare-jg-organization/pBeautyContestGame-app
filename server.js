@@ -203,10 +203,9 @@ app.post('/admin/games/:id/delete', async (req, res) => {
 // ROUTE: /games/general
 app.get('/general/games', async (req, res) => {
   try {
-    const stats = await getGeneralWinningStats();          // { mean, winning_value, total_answers }
-    const dist = await getGeneralAnswerDistribution();    // { countsByAnswer: { "0": n, ... } }
+    const stats = await getGeneralWinningStats();        
+    const dist = await getGeneralAnswerDistribution();    
 
-    // przygotuj dane do histogramu (tablica obiektów {value, count} tylko z >0)
     const distribution = Object.entries(dist.countsByAnswer)
       .map(([value, count]) => ({ value: Number(value), count: Number(count) }))
       .filter(x => x.count > 0)
@@ -225,11 +224,6 @@ app.get('/general/games', async (req, res) => {
   }
 });
 
-
-
-/* ====== API (jak wcześniej) – zostawiam skrótowo, masz je już zrobione ====== */
-
-// ... tu Twoje endpointy API /games, /answers, /admins, /auth/login z wcześniejszej wersji ...
 
 /* ===== START ===== */
 const port = Number(process.env.PORT ?? 3000);
