@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dodaj odpowiedź – Gra #<%= gameId %>
+  </title>
+  <link rel="stylesheet" href="/style/style.css" />
+</head>
+
+<body>
+  <h1>Dodaj odpowiedź – Gra #<%= gameId %>
+  </h1>
+
+  <div class="card">
+    <% if (error) { %>
+      <div class="error">
+        <%= error %>
+      </div>
+      <% } %>
+
+        <form method="post" action="/games/<%= gameId %>/anwser" novalidate>
+          <div class="row">
+            <input id="userName" name="userName" type="text" required placeholder="Nazwa użytkownika"
+              value="<%= values?.userName ?? '' %>" class="search" />
+          </div>
+
+          <div class="row">
+            <input id="answer" name="answer" type="number" min="0" max="100" step="1" required
+              placeholder="Odpowiedź (0–100)" value="<%= values?.answer ?? '' %>" class="search" />
+          </div>
+
+          <div class="actions">
+            <button class="btn btn-primary" type="submit">ZAGRAJ!</button>
+          </div>
+        </form>
+  </div>
+</body>
+
+</html>

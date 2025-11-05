@@ -3,17 +3,19 @@ import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-import { listGames } from './src/services/gameService.js';
+import { listGames, getGame } from './src/services/gameService.js';
 import { getWinningStats } from './src/services/winningStatsService.js';
 import { getAnswerDistribution } from './src/services/anwserDistributionService.js';
-import { listAnswers, getAnswersByIds } from './src/services/anwserService.js';
+import { listAnswers, getAnswersByIds,createAnswer } from './src/services/anwserService.js';
 
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
+
 app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 app.use('/style', express.static(path.join(__dirname, 'src', 'view', 'style')));
 app.use('/scripts', express.static(path.join(__dirname, 'src', 'view', 'scripts')));
 
@@ -70,6 +72,57 @@ app.get('/games/:gameId', async (req, res) => {
 
 // (opcjonalnie) przekierowanie z / na /gamse
 app.get('/', (req, res) => res.redirect('/games'));
+
+// GET: formularz odpowiedzi
+app.get('/games/:gameId/anwser', async (req, res) => {
+  try {
+    const gameId = Number(req.params.gameId);
+    const game = await getGame(gameId);
+    if (!game) return res.status(404).send('Game not found');
+
+    if (game.game_status !== 'open') {
+      return res.redirect(`/games/${gameId}`);
+    }
+
+    res.render('anwserFormView', {
+      gameId,
+      error: req.query.error ?? null,
+      values: { userName: '', answer: '' }
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).send('Server error');
+  }
+});
+
+// POST: zapis odpowiedzi
+app.post('/games/:gameId/anwser', async (req, res) => {
+  const gameId = Number(req.params.gameId);
+  const { userName, answer } = req.body;
+
+  try {
+    const game = await getGame(gameId);
+    if (!game) return res.status(404).send('Game not found');
+
+    if (game.game_status !== 'open') {
+      return res.redirect(`/games/${gameId}`);
+    }
+
+    const parsedAnswer = Number.parseInt(answer, 10);
+    if (!userName || !Number.isInteger(parsedAnswer) || parsedAnswer < 0 || parsedAnswer > 100) {
+      const msg = encodeURIComponent('Podaj nazwę oraz odpowiedź 0–100.');
+      return res.redirect(`/games/${gameId}/anwser?error=${msg}`);
+    }
+
+    await createAnswer(gameId, { userName, answer: parsedAnswer });
+    return res.redirect(`/games/${gameId}`);
+  } catch (e) {
+    console.error(e);
+    const msg = encodeURIComponent(e.message || 'Błąd zapisu odpowiedzi');
+    return res.redirect(`/games/${gameId}/anwser?error=${msg}`);
+  }
+});
+
 
 /* ====== API (jak wcześniej) – zostawiam skrótowo, masz je już zrobione ====== */
 

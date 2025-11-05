@@ -1,11 +1,3 @@
-/**
- * Histogram odpowiedzi (słupki 0..100, bez binowania).
- * Wymagane:
- *  - <canvas id="histogram" data-real-value="..." data-highlight-value="...">
- *  - <script id="dist-data" type="application/json">...</script>
- *  - Chart.js UMD (chart.umd.min.js) w <script> (globalny window.Chart)
- */
-
 (function () {
   // --- rejestracja wymaganych części Chart.js ---
   try {
@@ -92,7 +84,7 @@
     // kolory słupków (opcjonalnie czerwony dla highlightValue)
     let barColors = undefined;
     if (Number.isFinite(highlightValue)) {
-      barColors = labels.map(v => (v === highlightValue ? 'red' : undefined));
+      barColors = labels.map(v => (v === highlightValue ? 'red' :'#00BFFF'));
     }
 
     const ctx = canvas.getContext('2d');

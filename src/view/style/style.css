@@ -86,6 +86,7 @@ tr:hover {
   border-radius: 8px;
   min-width: 220px;
   color: var(--text-color);
+  text-align: center; 
   background: #fff;
 }
 
@@ -100,3 +101,26 @@ tr:hover {
   padding: 24px;
   text-align: center;
 }
+
+form .row { display: grid; gap: 8px; margin-bottom: 12px; }
+  .actions { display: flex; justify-content: center; margin-top: 20px; }
+  .btn { padding: 10px 20px; border: 1px solid #ddd; border-radius: 8px; background:#fff; cursor:pointer; font-size: 16px; }
+  .btn-primary {
+    background: #0f62fe;
+    color: #fff;
+    border-color: #0f62fe;
+    font-weight: 600;
+    min-width: 160px;
+    padding: 12px 28px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .error { color:#b40b0b; background:#fdecec; border:1px solid #f8d1d1; padding:10px 12px; border-radius:8px; margin-bottom:12px; }
+
+
+
+
+
+
+ 
+
