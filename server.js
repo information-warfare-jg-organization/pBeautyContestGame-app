@@ -225,6 +225,51 @@ app.get('/general/games', async (req, res) => {
 });
 
 
+// ====== API endpoint: POST /api/games/:gameId/answer ======
+app.post('/api/games/:gameId/answer', async (req, res) => {
+  const gameId = Number(req.params.gameId);
+  const { userName, answer } = req.body;
+
+  try {
+    const game = await getGame(gameId);
+
+    if (!game) {
+      return res.status(404).json({ error: 'Game not found' });
+    }
+
+    if (game.game_status !== 'open') {
+      return res.status(409).json({ error: 'Game is not open' });
+    }
+
+    const parsedAnswer = Number.parseInt(answer, 10);
+
+    if (!userName || !Number.isInteger(parsedAnswer) || parsedAnswer < 0 || parsedAnswer > 100) {
+      return res
+        .status(400)
+        .json({ error: 'Invalid payload. Provide userName and answer 0–100.' });
+    }
+
+    const created = await createAnswer(gameId, {
+      userName,
+      answer: parsedAnswer
+    });
+
+    return res.status(201).json({
+      ok: true,
+      gameId,
+      answer: {
+        userName,
+        value: parsedAnswer,
+        id: created?.id ?? null
+      }
+    });
+  } catch (e) {
+    console.error('API error:', e);
+    return res.status(500).json({ error: e.message || 'Internal server error' });
+  }
+});
+
+
 /* ===== START ===== */
 const port = Number(process.env.PORT ?? 3000);
 app.listen(port, () => {
