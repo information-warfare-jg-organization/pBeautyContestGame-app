@@ -17,6 +17,7 @@
     const winningDisplay = winningIsNumber ? winningValue.toFixed(4) : '—';
     const hasWinners = Array.isArray(winners) && winners.length > 0;
     const hasDist = Array.isArray(distribution) && distribution.length > 0;
+    const hasAllAnswers = Array.isArray(allAnswers) && allAnswers.length > 0;
   %>
 
   <div class="card" style="margin-bottom:16px;">
@@ -66,6 +67,7 @@
   data-real-value="<%= (typeof winningValue === 'number' && isFinite(winningValue)) ? winningValue : '' %>"
   data-highlight-value="<%= (Array.isArray(winners) && winners.length && typeof winners[0].answer === 'number') ? winners[0].answer : '' %>">
 </canvas>
+
   <script id="dist-data" type="application/json">
     <%- JSON.stringify(distribution || []) %>
   </script>
@@ -74,7 +76,18 @@
   <script src="/scripts/distributionChartScript.js"></script>
 <% } %>
 
+  <% if (hasAllAnswers) { %>
+    <h3>Wszystkie odpowiedzi (od najmniejszej do największej)</h3>
+    <ul class="players-list">
+      <% allAnswers.forEach(function(a) { %>
+        <li>
+          <strong><%= a.user_name %></strong> (odpowiedź: <%= a.answer %>)
+        </li>
+      <% }); %>
+    </ul>
+  <% } %>
 
   </div>
+  
 </body>
 </html>

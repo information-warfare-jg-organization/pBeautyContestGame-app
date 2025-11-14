@@ -1,7 +1,7 @@
 // CRUD dla tabeli answer
 import { pool } from '../db/db.js';
 
-export async function listAnswers({ gameId, limit = 50, offset = 0 } = {}) {
+export async function listAnswers({ gameId, limit = 200, offset = 0 } = {}) {
   const params = [];
   let where = '';
   if (gameId) {
@@ -14,12 +14,24 @@ export async function listAnswers({ gameId, limit = 50, offset = 0 } = {}) {
     SELECT a.answer_id, a.user_name, a.answer, a.game_id, a.answer_date
     FROM answer a
     ${where}
-    ORDER BY a.answer_date DESC
+    ORDER BY a.answer DESC
     LIMIT $${params.length - 1} OFFSET $${params.length}
   `;
   const { rows } = await pool.query(q, params);
   return rows;
 }
+
+export async function listAnswersByGame(gameId) {
+  const { rows } = await pool.query(
+    `SELECT a.answer_id, a.user_name, a.answer, a.game_id, a.answer_date
+     FROM answer a
+     WHERE a.game_id = $1
+     ORDER BY a.answer ASC`,
+    [Number(gameId)]
+  );
+  return rows;
+}
+
 
 
 export async function getAnswersByIds(ids = []) {

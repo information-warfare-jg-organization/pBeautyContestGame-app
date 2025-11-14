@@ -4,7 +4,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 import { listGames, getGame, createGame, updateGameStatus, deleteGame } from './src/services/gameService.js';
-import { getAnswersByIds, createAnswer, countAnswersByGame } from './src/services/answerService.js';
+import { getAnswersByIds, createAnswer, countAnswersByGame, listAnswersByGame } from './src/services/answerService.js';
 import { getWinningStats } from './src/services/winningStatsService.js';
 import { getAnswerDistribution } from './src/services/answerDistributionService.js';
 import { getGeneralWinningStats } from './src/services/generalWinningStatsService.js';
@@ -43,49 +43,49 @@ app.get('/games', async (req, res) => {
 // ====== WIDOK /game/gameId ======
 app.get('/games/:gameId', async (req, res) => {
   try {
-
     const gameId = Number(req.params.gameId);
-    try {
-      const game = await getGame(gameId);
-      if (!game) return res.status(404).send('Game not found');
+    const game = await getGame(gameId);
 
-      if (game.game_status === 'open') {
-        const answersCount = await countAnswersByGame(gameId);
-        return res.render('openGameDetailsView', {
-          gameId,
-          answersCount
-        });
-      }
+    if (!game) return res.status(404).send('Game not found');
 
-        } catch (e) {
-    console.error(e);
-    res.status(500).send('Server error');
-  }
-      const stats = await getWinningStats(gameId);          // mean, winning_value, closest_answer_ids
-      const dist = await getAnswerDistribution(gameId);    // countsByAnswer { "0": n, ... "100": n }
-
-      // Pobierz zwycięskie odpowiedzi (użytkownicy + wartości)
-      const winners = await getAnswersByIds(stats.closest_answer_ids);
-
-      // Przygotuj dane do histogramu: tylko słupki z count > 0, rosnąco
-      const distribution = Object.entries(dist.countsByAnswer)
-        .map(([value, count]) => ({ value: Number(value), count: Number(count) }))
-        .filter(x => x.count > 0)
-        .sort((a, b) => a.value - b.value);
-
-      res.render('gameDetailsView', {
+    // widok dla gry otwartej
+    if (game.game_status === 'open') {
+      const answersCount = await countAnswersByGame(gameId);
+      return res.render('openGameDetailsView', {
         gameId,
-        mean: stats.mean,
-        winningValue: stats.winning_value,
-        playersCount: stats.total_answers,
-        winners,
-        distribution
+        answersCount
       });
-    } catch (e) {
-      console.error(e);
-      res.status(e.status ?? 500).send(e.message ?? 'Błąd serwera');
     }
-  });
+
+    // statystyki gry zamkniętej
+    const stats = await getWinningStats(gameId);
+    const dist = await getAnswerDistribution(gameId);
+    const winners = await getAnswersByIds(stats.closest_answer_ids);
+
+    const distribution = Object.entries(dist.countsByAnswer)
+      .map(([value, count]) => ({ value: Number(value), count: Number(count) }))
+      .filter(x => x.count > 0)
+      .sort((a, b) => a.value - b.value);
+
+    const allAnswers = await listAnswersByGame(gameId);
+
+    res.render('gameDetailsView', {
+      gameId,
+      mean: stats.mean,
+      winningValue: stats.winning_value,
+      playersCount: stats.total_answers,
+      winners,
+      distribution,
+      allAnswers   
+    });
+
+  } catch (e) {
+    console.error(e);
+    res.status(500).send(e.message || 'Server error');
+  }
+});
+
+
 
 // (opcjonalnie) przekierowanie z / na /gamse
 app.get('/', (req, res) => res.redirect('/games'));
