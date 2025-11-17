@@ -269,6 +269,91 @@ app.post('/api/games/:gameId/answer', async (req, res) => {
   }
 });
 
+// ====== API endpoint: POST /api/games/:gameId/answer/series ======
+app.post('/api/games/:gameId/answer/series', async (req, res) => {
+  const gameId = Number(req.params.gameId);
+
+  try {
+    // 1) Sprawdź czy gra istnieje i jest otwarta
+    const game = await getGame(gameId);
+
+    if (!game) {
+      return res.status(404).json({ error: 'Game not found' });
+    }
+
+    if (game.game_status !== 'open') {
+      return res.status(409).json({ error: 'Game is not open' });
+    }
+
+    // 2) Weź listę odpowiedzi z body
+    //    Możemy obsłużyć zarówno { answers: [...] } jak i samą tablicę [...]
+    let answersPayload = req.body;
+    if (!Array.isArray(answersPayload) && Array.isArray(req.body.answers)) {
+      answersPayload = req.body.answers;
+    }
+
+    if (!Array.isArray(answersPayload) || answersPayload.length === 0) {
+      return res.status(400).json({
+        error: 'Provide a non-empty array of answers in body (either { "answers": [...] } or just [...]).'
+      });
+    }
+
+    // 3) Walidacja danych wejściowych
+    const sanitized = answersPayload.map((item, index) => {
+      const userName = item?.userName;
+      const rawAnswer = item?.answer;
+
+      const parsedAnswer = Number.parseInt(rawAnswer, 10);
+
+      if (typeof userName !== 'string' || userName.trim() === '') {
+        throw {
+          status: 400,
+          message: `answers[${index}].userName must be non-empty string`
+        };
+      }
+
+      if (!Number.isInteger(parsedAnswer) || parsedAnswer < 0 || parsedAnswer > 100) {
+        throw {
+          status: 400,
+          message: `answers[${index}].answer must be integer 0–100`
+        };
+      }
+
+      return {
+        userName: userName.trim(),
+        answer: parsedAnswer
+      };
+    });
+
+    // 4) Zapis do bazy – używamy istniejącej funkcji createAnswer
+    const createdAnswers = [];
+
+    for (const a of sanitized) {
+      // createAnswer ma już dodatkowe walidacje (gra otwarta, itp.)
+      const created = await createAnswer(gameId, a);
+      createdAnswers.push(created);
+    }
+
+    return res.status(201).json({
+      ok: true,
+      gameId,
+      count: createdAnswers.length,
+      answers: createdAnswers
+    });
+
+  } catch (e) {
+    console.error('API series error:', e);
+
+    // obsługa błędów “rzuconych ręcznie” (status, message)
+    if (e && typeof e === 'object' && 'status' in e) {
+      return res.status(e.status).json({ error: e.message || 'Validation error' });
+    }
+
+    return res.status(500).json({ error: e.message || 'Internal server error' });
+  }
+});
+
+
 
 /* ===== START ===== */
 const port = Number(process.env.PORT ?? 3000);
